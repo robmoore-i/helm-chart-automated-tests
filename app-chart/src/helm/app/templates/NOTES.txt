@@ -1,0 +1,1 @@
+Have fun! The app should now be available at http://{{ .Values.hostname }}!

@@ -1,0 +1,2 @@
+# The public hostname at which the application will be accessible over HTTP.
+hostname: app-127.0.0.1.nip.io
