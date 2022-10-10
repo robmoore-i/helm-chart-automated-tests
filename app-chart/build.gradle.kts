@@ -1,8 +1,11 @@
 @file:Suppress("UnstableApiUsage")
 
+import com.appbuild.DirectorySystemPropertyProvider
+
 plugins {
     groovy
     `jvm-test-suite`
+    id("appbuild.directory-provider")
 }
 
 description = "A Helm chart which install The App"
@@ -32,9 +35,12 @@ testing {
 
 tasks.named<Test>("test") {
     testLogging.showStandardStreams = true
-    jvmArgumentProviders += HelmChartDirProvider(layout.projectDirectory.dir("src/helm").asFile)
+    jvmArgumentProviders += DirectorySystemPropertyProvider("test.helm.chart.dir", layout.projectDirectory.dir("src/helm").asFile)
 }
 
-class HelmChartDirProvider(@InputDirectory @PathSensitive(PathSensitivity.RELATIVE) val helmChartDir: File) : CommandLineArgumentProvider {
-    override fun asArguments(): List<String> = listOf("-Dtest.helm.chart.dir=${helmChartDir.absolutePath}")
+configurations.create("helmChart") {
+    isCanBeConsumed = true
+    isCanBeResolved = false
+    outgoing.artifact(layout.projectDirectory.dir("src/helm/app"))
+    attributes.attribute(Usage.USAGE_ATTRIBUTE, objects.named("helm-chart"))
 }
