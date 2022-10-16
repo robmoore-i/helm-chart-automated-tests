@@ -11,7 +11,7 @@ class Kubectl {
         this.debug = debug
     }
 
-    List<String> podNames() {
+    String getPods() {
         def command = [kubectlPath, "-n", namespace, "get", "pods"]
         debug && println(command.join(" "))
         def stdOut = new StringBuilder()
@@ -19,6 +19,12 @@ class Kubectl {
         command.execute().waitForProcessOutput(stdOut, stdErr)
         debug && println(stdOut)
         debug && println(stdErr)
-        []
+        stdOut.toString()
+    }
+
+    def showEvents() {
+        def command = [kubectlPath, "-n", namespace, "get", "events"]
+        println(command.join(" "))
+        command.execute().waitForProcessOutput(System.out, System.err)
     }
 }

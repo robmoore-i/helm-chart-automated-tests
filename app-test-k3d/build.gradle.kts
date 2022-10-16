@@ -60,14 +60,10 @@ testing {
     }
 }
 
-val resolveHelmChart by tasks.registering(Sync::class) {
-    from(helmChart)
-    into(layout.buildDirectory.dir("helm/app"))
-}
-
 tasks.named<Test>("test") {
     testLogging.showStandardStreams = true
+    inputs.files(helmChart)
     dependsOn(k3dCreate)
     finalizedBy(k3dRm)
-    jvmArgumentProviders += LazyDirectorySystemPropertyProvider("test.helm.chart.dir", resolveHelmChart.map { it.destinationDir.parentFile })
+    jvmArgumentProviders += LazyDirectorySystemPropertyProvider("test.helm.chart.dir", providers.provider { helmChart.singleFile.parentFile })
 }
