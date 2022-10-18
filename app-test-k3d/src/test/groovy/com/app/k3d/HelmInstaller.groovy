@@ -21,7 +21,7 @@ class HelmInstaller {
         this.debug = debug
     }
 
-    def install(List<String> valuesYaml, Map<String, String> files = [:]) {
+    def install(List<String> valuesYaml) {
         def valuesPathParameters = valuesYaml.collect { String it ->
             def valuesPath = Files.createTempFile("helm-values-", ".yaml")
             !debug && valuesPath.toFile().deleteOnExit()
@@ -30,16 +30,7 @@ class HelmInstaller {
             return ["-f", "${valuesPath.toAbsolutePath()}"]
         }.flatten()
 
-        def externalFiles = files.collect {
-            def parameters = Files.createTempFile("helm-values-", ".yaml")
-            !debug && parameters.toFile().deleteOnExit()
-            //noinspection GrDeprecatedAPIUsage // False positive
-            Files.write(parameters, it.value.getBytes(UTF_8))
-            return "--set-file=${it.key}=${parameters.toAbsolutePath()}"
-        }
-
-        def command = [helmPath, "install", "app", "--create-namespace", "--namespace", namespace, "./$chartName"] \
-                   + valuesPathParameters + externalFiles
+        def command = [helmPath, "install", "app", "--create-namespace", "--namespace", namespace, "./$chartName"] + valuesPathParameters
 
         debug && println(command.join(" "))
         def stdOut = new StringBuilder()

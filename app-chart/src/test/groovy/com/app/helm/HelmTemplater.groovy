@@ -28,13 +28,13 @@ class HelmTemplater {
         this.debug = debug
     }
 
-    Manifests template(List<String> valuesYaml, Map<String, String> files = [:]) {
-        def (manifests, err) = templateResult(valuesYaml, files)
+    Manifests template(List<String> valuesYaml) {
+        def (manifests, err) = templateResult(valuesYaml)
         assert !err.contains("Error")
         return manifests
     }
 
-    def templateResult(List<String> valuesYaml, Map<String, String> files = [:]) {
+    def templateResult(List<String> valuesYaml) {
         def valuesPathParameters = valuesYaml.collect { String it ->
             def valuesPath = Files.createTempFile("helm-values-", ".yaml")
             !debug && valuesPath.toFile().deleteOnExit()
@@ -43,19 +43,11 @@ class HelmTemplater {
             return ["-f", "${valuesPath.toAbsolutePath()}"]
         }.flatten()
 
-        def externalFiles = files.collect {
-            def parameters = Files.createTempFile("helm-values-", ".yaml")
-            !debug && parameters.toFile().deleteOnExit()
-            //noinspection GrDeprecatedAPIUsage // False positive
-            Files.write(parameters, it.value.getBytes(UTF_8))
-            return "--set-file=${it.key}=${parameters.toAbsolutePath()}"
-        }
-
         def apiVersionParameters = apiVersions.collect { "--api-versions=$it" }
 
-        def command = [helmPath, "template", "app", "./$chartName"] \
-                 + valuesPathParameters + externalFiles + ["--debug", "--dry-run", "--kube-version=$kubeVersion"] \
-                 + apiVersionParameters
+
+        def flags = ["--debug", "--dry-run", "--kube-version=$kubeVersion"]
+        def command = [helmPath, "template", "app", "./$chartName"] + valuesPathParameters + apiVersionParameters + flags
 
         debug && println(command.join(" "))
         def stdOut = new StringBuilder()
